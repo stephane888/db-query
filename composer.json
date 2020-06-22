@@ -1,0 +1,21 @@
+{
+	"name" : "stephane888/db-query",
+	"description" : "Query for DB",
+	"type" : "library",
+	"license" : "MIT",
+	"version" : "dev-master",
+	"authors" : [{
+			"name" : "stephane888",
+			"email" : "kksasteph888@gmail.com",
+			"homepage" : "http://wb-universe.com",
+			"role" : "Developer"
+		}
+	],
+	"minimum-stability" : "stable",
+	"autoload" : {
+		"psr-4" : {
+			"Query\\" : "src/"
+		}
+	},
+	"require" : {}
+}

@@ -1,6 +1,12 @@
 <?php
 namespace Query\Repositories;
 
+/**
+ *
+ * @deprecated
+ * @author stephane
+ *
+ */
 class AjaxPrepareResponse {
 
   public static $codeSuccess;

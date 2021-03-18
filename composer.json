@@ -3,7 +3,7 @@
 	"description" : "Query for DB",
 	"type" : "library",
 	"license" : "MIT",
-	"version" : "dev-master",
+	"version" : "0.2",
 	"authors" : [{
 			"name" : "stephane888",
 			"email" : "kksasteph888@gmail.com",
@@ -11,7 +11,7 @@
 			"role" : "Developer"
 		}
 	],
-	"minimum-stability" : "stable",
+	"minimum-stability": "stable",
 	"autoload" : {
 		"psr-4" : {
 			"Query\\" : "src/"

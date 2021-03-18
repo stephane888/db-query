@@ -8,10 +8,15 @@ use Stephane888\Debug\debugLog;
  * when we use WbuJsonDB, donc call db.class.php
  *
  * @author stephane
- *
+ *        
  */
 class WbuJsonDb {
 
+  /**
+   * Use for select.
+   *
+   * @var array
+   */
   public $fields = [];
 
   public $GroupBy = [];
@@ -22,7 +27,8 @@ class WbuJsonDb {
    * Exemple:$BD->Where = [
    * 'order-id' => [
    * 'field' => 'id_order',
-   * 'value' => $value
+   * 'value' => $value,
+   * 'operator' => '='
    * ]
    * ];
    *
@@ -31,6 +37,8 @@ class WbuJsonDb {
   public $Where = [];
 
   protected $arg = [];
+
+  public $Last_arg = [];
 
   public $INNER_JOIN = [];
 
@@ -41,20 +49,38 @@ class WbuJsonDb {
   public $last_req = NULL;
 
   /**
-   * for Insert and Update
+   * Use for Insert and Update
    *
    * @var array
    */
   public $fieldsValues = [];
 
   /**
-   * Permet de d'enregistrer les erreurs dans un log.
+   * Permet d'enregistrer les erreurs dans un log.
    */
-  public $debug = false;
+  public $debug = true;
 
-  function __construct($dataBaseConfig)
+  /**
+   * Pour verifier une erreur.
+   */
+  private $SqlHasError = false;
+
+  public $lastErrorInfo = '';
+
+  /**
+   * cc
+   */
+  public $filename = '';
+
+  /**
+   *
+   * @param array $dataBaseConfig
+   * @param boolean $autocommit
+   */
+  function __construct($dataBaseConfig, $autocommit = true)
   {
     $this->credentielDB($dataBaseConfig);
+    $this->setAutocommit($autocommit);
   }
 
   public function resetValue()
@@ -71,6 +97,11 @@ class WbuJsonDb {
     }
   }
 
+  public function hasError()
+  {
+    return $this->SqlHasError;
+  }
+
   /**
    * connection à la Base de donnée
    */
@@ -81,8 +112,21 @@ class WbuJsonDb {
       DB::$password = $dataBaseConfig['password'];
       DB::$dbName = $dataBaseConfig['dbName'];
     } else {
-      die('Error de connection à la base de donnée');
+      throw new \Exception('Paramettre de connexion a la BD non definit');
     }
+  }
+
+  /**
+   * Permet de modifier le status de l'auto commit de Mysql.
+   * Ce paramettre est par defaut à true, i.e toutes les requetes sont enregistés.
+   * Dans la mesure ou on la definit à false, il faut faire le commit à la fin des requetes.
+   * example de commit: $this->getPDO()->commit();
+   *
+   * @param boolean $autocommit
+   */
+  public function setAutocommit($autocommit)
+  {
+    DB::$autocommit = $autocommit;
   }
 
   public function select($table)
@@ -142,11 +186,22 @@ class WbuJsonDb {
    * Pour effectuer une req sans argument, ou tout est definit dans la requete
    *
    * @param string $req
-   * @return array // retourne une ligne.
+   * @return array // Retourne une ligne.
    */
   public function queryFirstRow($req)
   {
     return $this->executeQueryOne($req);
+  }
+
+  /**
+   * exemple : DELETE FROM Users WHERE nom='Giraud'
+   *
+   * @param string $req
+   * @return boolean[]|NULL[]
+   */
+  public function deleteDatas($req)
+  {
+    return DB::deletePrepare($req);
   }
 
   protected function executeQuery($req, $arg = [])
@@ -154,12 +209,11 @@ class WbuJsonDb {
     $result = DB::selectPrepare($req, $arg);
     if ($this->debug && ! empty($result['PHP_execution_error'])) {
       $errors = [
-        'name' => 'update',
         'req' => $req,
         'error' => $result
       ];
-      $filename = 'sql__debug-' . date('m-Y');
-      debugLog::saveLogs($errors, $filename);
+      $filename = ($this->filename != '') ? $this->filename : 'executeQuery_error-' . date('d-m-Y');
+      debugLog::saveLogs($errors, 'sql__' . $filename);
     }
     return $result;
   }
@@ -169,12 +223,11 @@ class WbuJsonDb {
     $result = DB::selectPrepare($req, $arg, 'one');
     if ($this->debug && ! empty($result['PHP_execution_error'])) {
       $errors = [
-        'name' => 'update',
         'req' => $req,
         'error' => $result
       ];
-      $filename = 'sql__debug-' . date('m-Y');
-      debugLog::saveLogs($errors, $filename);
+      $filename = ($this->filename != '') ? $this->filename : 'executeQueryOne_error-' . date('d-m-Y');
+      debugLog::saveLogs($errors, 'sql__' . $filename);
     }
     return $result;
   }
@@ -257,6 +310,7 @@ class WbuJsonDb {
     }
 
     $this->last_req = $req;
+    $this->Last_arg = $this->arg;
     return $req;
   }
 
@@ -276,14 +330,22 @@ class WbuJsonDb {
       $req = $this->buildReqIn($table);
       $this->last_req = $req;
       $result = DB::insertPrepare($req, $this->arg);
-      if ($this->debug && ! empty($result['PHP_execution_error'])) {
-        $errors = [
-          'name' => 'update',
-          'req' => $req,
-          'error' => $result
-        ];
-        $filename = 'sql__debug-' . date('m-Y');
-        debugLog::saveLogs($errors, $filename);
+      $this->SqlHasError = false;
+      $this->lastErrorInfo = '';
+      if (! empty($result['PHP_execution_error'])) {
+        $this->lastErrorInfo = $result;
+        $this->SqlHasError = true;
+        /**
+         * Pour renvoyer les erreurs vers un fichiers.
+         */
+        if ($this->debug) {
+          $errors = [
+            'req' => $req,
+            'error' => $result
+          ];
+          $filename = ($this->filename != '') ? $this->filename : 'insert_error-' . date('d-m-Y');
+          debugLog::saveLogs($errors, 'sql__' . $filename);
+        }
       }
       $this->resetValue();
       return $result;
@@ -306,14 +368,17 @@ class WbuJsonDb {
       $this->last_req = $req;
       $result = DB::updatePrepare($req, $this->arg);
       $this->resetValue();
+      $this->SqlHasError = false;
+      $this->lastErrorInfo = '';
       if ($this->debug && ! empty($result['PHP_execution_error'])) {
+        $this->lastErrorInfo = $result;
+        $this->SqlHasError = true;
         $errors = [
-          'name' => 'update',
           'table' => $table,
           'error' => $result
         ];
-        $filename = 'sql__debug-' . date('m-Y');
-        debugLog::saveLogs($errors, $filename);
+        $filename = ($this->filename != '') ? $this->filename : 'update_error-' . date('m-Y');
+        debugLog::saveLogs($errors, 'sql__' . $filename);
       }
       return $result;
     }
@@ -405,11 +470,15 @@ class WbuJsonDb {
   public function getPDO()
   {
     // On se connecte
-    $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
-      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ));
-    $bdd->exec("set names utf8");
-    return $bdd;
+    /*
+     * $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
+     * PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+     * ));
+     * $bdd->exec("set names utf8");
+     * return $bdd;
+     * /*
+     */
+    return DB::getConnectParam();
   }
 
   /**

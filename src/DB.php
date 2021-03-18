@@ -37,6 +37,22 @@ class DB {
 
   public static $port = 3306;
 
+  // custom
+  /**
+   * Permet la sauvergarde automatique de chaque requette.
+   * default = true;
+   *
+   * @var boolean
+   */
+  public static $autocommit = true;
+
+  /**
+   * on definit une seule connection
+   *
+   * @var object
+   */
+  private static $BDD = null;
+
   // hhvm complains if this is null
   public static $socket = null;
 
@@ -427,17 +443,12 @@ class DB {
   {
     try {
       // On se connecte
-      $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
-        // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
-      ));
-      $bdd->exec("set names utf8");
+      $bdd = self::connectParam();
 
       // On prépare la requête
       $requete = $bdd->prepare($req);
 
-      // On lie la variable $email définie au-dessus au paramètre :email de la requête préparée
+      //
       foreach ($arg as $k => $j) {
         $requete->bindValue($k, $j, PDO::PARAM_STR);
       }
@@ -469,11 +480,7 @@ class DB {
   public static function selectPrepareV2($req, $arg = [], $type = '')
   {
     // On se connecte
-    $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
-      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-      PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
-    ));
-    $bdd->exec("set names utf8");
+    $bdd = self::connectParam();
     // On prépare la requête
     $requete = $bdd->prepare($req);
 
@@ -505,10 +512,7 @@ class DB {
   {
     try {
       // On se connecte
-      $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-      ));
-      $bdd->exec("set names utf8");
+      $bdd = self::connectParam();
       // On prépare la requête
       $requete = $bdd->prepare($req);
 
@@ -518,7 +522,7 @@ class DB {
       }
 
       // On exécute la requête
-      $rt = $requete->execute();
+      $requete->execute();
       // \customapi\debugLog::logs($rt, 'execute_up');
       // \customapi\debugLog::logs($requete->rowCount(), 'rowCount');
       // return $rt;// true or false
@@ -531,22 +535,49 @@ class DB {
     }
   }
 
-  public static function deletePrepare()
+  public static function deletePrepare($req)
   {
-    try {} catch (Exception $e) {
+    try {
+      $bdd = self::connectParam();
+      $requete = $bdd->prepare($req);
+      $requete->execute();
+      $result = $requete->rowCount();
+      $bdd = null;
+      return $result;
+    } catch (Exception $e) {
       return Utility::errorMessage($e);
     }
   }
 
-  protected static function connectPAram()
+  protected static function connectParam()
   {
     // On se connecte
-    $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
-      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-      PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
-      // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
-    ));
+    if (self::$autocommit) {
+      $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
+        // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+      ));
+      $bdd->exec("set names utf8");
+    } else {
+      if (empty(self::$BDD)) {
+        $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
+          PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+          PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
+          // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+        ));
+        $bdd->exec("set names utf8");
+        $bdd->beginTransaction();
+        self::$BDD = $bdd;
+      }
+      $bdd = self::$BDD;
+    }
     return $bdd;
+  }
+
+  public static function getConnectParam()
+  {
+    return self::connectParam();
   }
 
   /**
@@ -560,10 +591,7 @@ class DB {
   {
     try {
       // On se connecte
-      $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user, DB::$password, array(
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-      ));
-      $bdd->exec("set names utf8");
+      $bdd = self::connectParam();
       // On prépare la requête
       $requete = $bdd->prepare($req);
 

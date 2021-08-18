@@ -19,8 +19,9 @@ class Utility {
    */
   public static function checkCredentiel($configDataBase, $databaseType)
   {
+    $check = str_contains($_SERVER['SERVER_NAME'], ".kksa");
     if (! empty($databaseType)) {
-      if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || "wb-universe" == gethostname()) {
+      if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {
         $databaseType = 'localhost';
       } elseif (empty($configDataBase[$databaseType])) {
         throw new Error('Base de donnée non definit');

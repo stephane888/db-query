@@ -17,8 +17,7 @@ class Utility {
    * @param string $databaseType
    * @return array
    */
-  public static function checkCredentiel($configDataBase, $databaseType)
-  {
+  public static function checkCredentiel($configDataBase, $databaseType) {
     $check = str_contains($_SERVER['SERVER_NAME'], ".kksa");
     if (! empty($databaseType)) {
       if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {
@@ -39,8 +38,7 @@ class Utility {
    * @param string $format
    * @return string
    */
-  public static function formatDateToMysql(DateTime $date, $format = "Y-m-d h:i:s")
-  {
+  public static function formatDateToMysql(DateTime $date, $format = "Y-m-d h:i:s") {
     return $date->format($format);
   }
 
@@ -50,8 +48,7 @@ class Utility {
    * @param string $format
    * @return DateTime|false
    */
-  public static function ValideDate($date, $format = "d-m-Y H:i:s")
-  {
+  public static function ValideDate($date, $format = "d-m-Y H:i:s") {
     $date = DateTime::createFromFormat($format, $date);
     if ($date) {
       return $date;
@@ -60,13 +57,11 @@ class Utility {
     }
   }
 
-  public static function DateTimegetLastErrors()
-  {
+  public static function DateTimegetLastErrors() {
     return DateTime::getLastErrors();
   }
 
-  public static function getColumnInfo(&$filters, $column, $operateur, $removeColumn = false)
-  {
+  public static function getColumnInfo(&$filters, $column, $operateur, $removeColumn = false) {
     if (! empty($filters['AND'])) {
       foreach ($filters['AND'] as $key => $value) {
         if ($value['column'] == $column && $value['operator'] == $operateur) {
@@ -87,8 +82,7 @@ class Utility {
    * @param string $column
    * @param string $new_column
    */
-  public static function ChangeNameColumn(&$filters, $column, $new_column)
-  {
+  public static function ChangeNameColumn(&$filters, $column, $new_column) {
     if (! empty($filters['AND'])) {
       foreach ($filters['AND'] as $key => $value) {
         if ($value['column'] == $column) {
@@ -106,13 +100,13 @@ class Utility {
   }
 
   /**
+   * Permet de construire un filtre à partir des données recus (generalment par ajax).
    * Le filtres est construit sans le Where.
    *
    * @param array $filters
    * @return string
    */
-  public static function buildFilterSql(array $filters)
-  {
+  public static function buildFilterSql(array $filters) {
     // debugLog::saveJson($filters, 'buildFilterSql' . time());
     $sql = '';
     if (! empty($filters['AND'])) {
@@ -128,8 +122,7 @@ class Utility {
     return $sql;
   }
 
-  protected static function buildFilterSql__AND($filters)
-  {
+  protected static function buildFilterSql__AND(array $filters) {
     $sql = '';
     foreach ($filters as $value) {
       if (! empty($value['column'])) {
@@ -144,13 +137,15 @@ class Utility {
         if ($value['value'] === 0 || $value['value'] === "0") {
           $sql .= 0;
         } elseif (! empty($value['value'])) {
-          if (trim($value['operator']) == 'LIKE') {
-            $valeur = " '\%" . $value['value'] . "\%' ";
-            $valeur = str_replace("\%", "%", $valeur);
-            // $sql .= " '$valeur' ";
-            $sql .= " '%" . $value['value'] . "%' ";
-          } elseif (trim($value['operator']) == 'IN' || trim($value['operator']) == 'NOT IN') {
-            $sql .= " ('" . $value['value'] . "') ";
+          if (! empty($value['operator'])) {
+            if (trim($value['operator']) == 'LIKE') {
+              $valeur = " '\%" . $value['value'] . "\%' ";
+              $valeur = str_replace("\%", "%", $valeur);
+              // $sql .= " '$valeur' ";
+              $sql .= " '%" . $value['value'] . "%' ";
+            } elseif (trim($value['operator']) == 'IN' || trim($value['operator']) == 'NOT IN') {
+              $sql .= " ('" . $value['value'] . "') ";
+            }
           } else {
             $sql .= " '" . $value['value'] . "' ";
           }
@@ -164,8 +159,7 @@ class Utility {
     return $sql;
   }
 
-  protected static function buildFilterSql__OR($filters)
-  {
+  protected static function buildFilterSql__OR(array $filters) {
     $sql = '';
     foreach ($filters as $value) {
       if (! empty($value['column'])) {

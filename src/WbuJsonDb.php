@@ -95,7 +95,7 @@ class WbuJsonDb {
    * Connection à la Base de donnée
    */
   protected function credentielDB($dataBaseConfig) {
-    if (!empty($dataBaseConfig['user']) && !empty($dataBaseConfig['password']) && !empty($dataBaseConfig['dbName'])) {
+    if (!empty($dataBaseConfig['user']) && isset($dataBaseConfig['password']) && !empty($dataBaseConfig['dbName'])) {
       DB::$user = $dataBaseConfig['user'];
       DB::$password = $dataBaseConfig['password'];
       DB::$dbName = $dataBaseConfig['dbName'];

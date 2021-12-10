@@ -2,7 +2,6 @@
 
 namespace Query;
 
-use PDO;
 use Stephane888\Debug\debugLog;
 
 /**
@@ -96,11 +95,11 @@ class WbuJsonDb {
    */
   protected function credentielDB($dataBaseConfig) {
     if (!empty($dataBaseConfig['user']) && isset($dataBaseConfig['password']) && !empty($dataBaseConfig['dbName'])) {
-      DB::$user = $dataBaseConfig['user'];
-      DB::$password = $dataBaseConfig['password'];
-      DB::$dbName = $dataBaseConfig['dbName'];
+      WbuDb::$user = $dataBaseConfig['user'];
+      WbuDb::$password = $dataBaseConfig['password'];
+      WbuDb::$dbName = $dataBaseConfig['dbName'];
       if (!empty($dataBaseConfig['host'])) {
-        DB::$host = $dataBaseConfig['host'];
+        WbuDb::$host = $dataBaseConfig['host'];
         debugLog::saveLogs($dataBaseConfig, 'credentielDB');
       }
     }
@@ -120,7 +119,7 @@ class WbuJsonDb {
    * @param boolean $autocommit
    */
   public function setAutocommit($autocommit) {
-    DB::$autocommit = $autocommit;
+    WbuDb::$autocommit = $autocommit;
   }
   
   public function select($table) {
@@ -157,7 +156,7 @@ class WbuJsonDb {
    * @param string $req
    */
   public function CustomRequestV2($req) {
-    return DB::selectPrepareV2($req, []);
+    return WbuDb::selectPrepareV2($req, []);
   }
   
   /**
@@ -189,11 +188,11 @@ class WbuJsonDb {
    * @return boolean[]|NULL[]
    */
   public function deleteDatas($req) {
-    return DB::deletePrepare($req);
+    return WbuDb::deletePrepare($req);
   }
   
   protected function executeQuery($req, $arg = []) {
-    $result = DB::selectPrepare($req, $arg);
+    $result = WbuDb::selectPrepare($req, $arg);
     if ($this->debug && !empty($result['PHP_execution_error'])) {
       $errors = [
         'req' => $req,
@@ -206,7 +205,7 @@ class WbuJsonDb {
   }
   
   protected function executeQueryOne($req, $arg = []) {
-    $result = DB::selectPrepare($req, $arg, 'one');
+    $result = WbuDb::selectPrepare($req, $arg, 'one');
     if ($this->debug && !empty($result['PHP_execution_error'])) {
       $errors = [
         'req' => $req,
@@ -315,7 +314,7 @@ class WbuJsonDb {
     if (!empty($this->fieldsValues)) {
       $req = $this->buildReqIn($table);
       $this->last_req = $req;
-      $result = DB::insertPrepare($req, $this->arg);
+      $result = WbuDb::insertPrepare($req, $this->arg);
       $this->SqlHasError = false;
       $this->lastErrorInfo = '';
       if (!empty($result['PHP_execution_error'])) {
@@ -351,7 +350,7 @@ class WbuJsonDb {
     if (!empty($this->fieldsValues) && !empty($this->Where)) {
       $req = $this->buildReqUp($table);
       $this->last_req = $req;
-      $result = DB::updatePrepare($req, $this->arg);
+      $result = WbuDb::updatePrepare($req, $this->arg);
       $this->resetValue();
       $this->SqlHasError = false;
       $this->lastErrorInfo = '';
@@ -454,17 +453,7 @@ class WbuJsonDb {
   }
   
   public function getPDO() {
-    // On se connecte
-    /*
-     * $bdd = new PDO('mysql:host=localhost;dbname=' . DB::$dbName, DB::$user,
-     * DB::$password, array(
-     * PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-     * ));
-     * $bdd->exec("set names utf8");
-     * return $bdd;
-     * /*
-     */
-    return DB::getConnectParam();
+    return WbuDb::getConnectParam();
   }
   
   /**

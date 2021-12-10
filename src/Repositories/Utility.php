@@ -4,7 +4,6 @@ namespace Query\Repositories;
 
 use DateTime;
 use Stephane888\Debug\debugLog;
-use PhpParser\Error;
 
 class Utility {
   public static $result;
@@ -24,13 +23,13 @@ class Utility {
         $databaseType = 'localhost';
       }
       elseif (empty($configDataBase[$databaseType])) {
-        throw new Error('Base de donnée non definit');
+        throw new \Error('Base de donnée non definit');
       }
       self::$result['base de donée'][] = $configDataBase[$databaseType];
       return $configDataBase[$databaseType];
     }
     else {
-      throw new Error('Echec de configuration de la BD');
+      throw new \Error('Echec de configuration de la BD');
     }
   }
   

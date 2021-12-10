@@ -99,8 +99,10 @@ class WbuJsonDb {
       DB::$user = $dataBaseConfig['user'];
       DB::$password = $dataBaseConfig['password'];
       DB::$dbName = $dataBaseConfig['dbName'];
-      if (!empty($dataBaseConfig['host']))
+      if (!empty($dataBaseConfig['host'])) {
         DB::$host = $dataBaseConfig['host'];
+        debugLog::saveLogs($dataBaseConfig, 'credentielDB');
+      }
     }
     else {
       throw new \Exception('Paramettre de connexion a la BD non definit');

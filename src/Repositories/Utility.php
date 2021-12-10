@@ -1,4 +1,5 @@
 <?php
+
 namespace Query\Repositories;
 
 use DateTime;
@@ -6,9 +7,8 @@ use Stephane888\Debug\debugLog;
 use PhpParser\Error;
 
 class Utility {
-
   public static $result;
-
+  
   /**
    * Return les parametres pour la connection à la BD;
    * wb-universe est considere comme le du serveur en local.
@@ -19,19 +19,21 @@ class Utility {
    */
   public static function checkCredentiel($configDataBase, $databaseType) {
     $check = str_contains($_SERVER['SERVER_NAME'], ".kksa");
-    if (! empty($databaseType)) {
+    if (!empty($databaseType)) {
       if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {
         $databaseType = 'localhost';
-      } elseif (empty($configDataBase[$databaseType])) {
+      }
+      elseif (empty($configDataBase[$databaseType])) {
         throw new Error('Base de donnée non definit');
       }
       self::$result['base de donée'][] = $configDataBase[$databaseType];
       return $configDataBase[$databaseType];
-    } else {
+    }
+    else {
       throw new Error('Echec de configuration de la BD');
     }
   }
-
+  
   /**
    *
    * @param DateTime $date
@@ -41,7 +43,7 @@ class Utility {
   public static function formatDateToMysql(DateTime $date, $format = "Y-m-d h:i:s") {
     return $date->format($format);
   }
-
+  
   /**
    *
    * @param String $date
@@ -52,17 +54,18 @@ class Utility {
     $date = DateTime::createFromFormat($format, $date);
     if ($date) {
       return $date;
-    } else {
+    }
+    else {
       return false;
     }
   }
-
+  
   public static function DateTimegetLastErrors() {
     return DateTime::getLastErrors();
   }
-
+  
   public static function getColumnInfo(&$filters, $column, $operateur, $removeColumn = false) {
-    if (! empty($filters['AND'])) {
+    if (!empty($filters['AND'])) {
       foreach ($filters['AND'] as $key => $value) {
         if ($value['column'] == $column && $value['operator'] == $operateur) {
           if ($removeColumn) {
@@ -74,7 +77,7 @@ class Utility {
     }
     return false;
   }
-
+  
   /**
    * Permet de changer le nom d'une colonne.
    *
@@ -83,14 +86,14 @@ class Utility {
    * @param string $new_column
    */
   public static function ChangeNameColumn(&$filters, $column, $new_column) {
-    if (! empty($filters['AND'])) {
+    if (!empty($filters['AND'])) {
       foreach ($filters['AND'] as $key => $value) {
         if ($value['column'] == $column) {
           $filters['AND'][$key]['column'] = $new_column;
         }
       }
     }
-    if (! empty($filters['OR'])) {
+    if (!empty($filters['OR'])) {
       foreach ($filters['OR'] as $key => $value) {
         if ($value['column'] == $column) {
           $filters['OR'][$key]['column'] = $new_column;
@@ -98,9 +101,10 @@ class Utility {
       }
     }
   }
-
+  
   /**
-   * Permet de construire un filtre à partir des données recus (generalment par ajax).
+   * Permet de construire un filtre à partir des données recus (generalment par
+   * ajax).
    * Le filtres est construit sans le Where.
    *
    * @param array $filters
@@ -109,47 +113,56 @@ class Utility {
   public static function buildFilterSql(array $filters) {
     // debugLog::saveJson($filters, 'buildFilterSql' . time());
     $sql = '';
-    if (! empty($filters['AND'])) {
+    if (!empty($filters['AND'])) {
       $sql .= ' ' . self::buildFilterSql__AND($filters['AND']) . ' ';
     }
-    if (! empty($filters['OR'])) {
+    if (!empty($filters['OR'])) {
       if ($sql == '') {
         $sql .= ' ' . self::buildFilterSql__OR($filters['OR']) . ' ';
-      } else {
+      }
+      else {
         $sql .= ' AND ( ' . self::buildFilterSql__OR($filters['OR']) . ' ) ';
       }
     }
     return $sql;
   }
-
+  
   protected static function buildFilterSql__AND(array $filters) {
     $sql = '';
     foreach ($filters as $value) {
-      if (! empty($value['column'])) {
-        $prefix = (! empty($value['preffix'])) ? $value['preffix'] . '.' : '';
+      if (!empty($value['column'])) {
+        $prefix = (!empty($value['preffix'])) ? $value['preffix'] . '.' : '';
         $sql .= ' ' . $prefix . '`' . $value['column'] . '` ';
-        if (! empty($value['operator'])) {
+        if (!empty($value['operator'])) {
           $sql .= $value['operator'];
-        } else {
+        }
+        else {
           $sql .= '=';
         }
-
+        
         if ($value['value'] === 0 || $value['value'] === "0") {
           $sql .= 0;
-        } elseif (! empty($value['value'])) {
-          if (! empty($value['operator'])) {
+        }
+        elseif (!empty($value['value'])) {
+          if (!empty($value['operator'])) {
             if (trim($value['operator']) == 'LIKE') {
               $valeur = " '\%" . $value['value'] . "\%' ";
               $valeur = str_replace("\%", "%", $valeur);
               // $sql .= " '$valeur' ";
               $sql .= " '%" . $value['value'] . "%' ";
-            } elseif (trim($value['operator']) == 'IN' || trim($value['operator']) == 'NOT IN') {
+            }
+            elseif (trim($value['operator']) == 'IN' || trim($value['operator']) == 'NOT IN') {
               $sql .= " ('" . $value['value'] . "') ";
             }
-          } else {
+            else {
+              $sql .= " '" . $value['value'] . "' ";
+            }
+          }
+          else {
             $sql .= " '" . $value['value'] . "' ";
           }
-        } elseif ($value['value'] === NULL) {
+        }
+        elseif ($value['value'] === NULL) {
           $sql .= " NULL ";
         }
         $sql .= ' AND ';
@@ -158,18 +171,19 @@ class Utility {
     $sql = \trim($sql, ' AND ');
     return $sql;
   }
-
+  
   protected static function buildFilterSql__OR(array $filters) {
     $sql = '';
     foreach ($filters as $value) {
-      if (! empty($value['column'])) {
+      if (!empty($value['column'])) {
         $sql .= ' `' . $value['column'] . '` ';
-        if (! empty($value['operator'])) {
+        if (!empty($value['operator'])) {
           $sql .= $value['operator'];
-        } else {
+        }
+        else {
           $sql .= '=';
         }
-        if (! empty($value['value'])) {
+        if (!empty($value['value'])) {
           $sql .= "'" . $value['value'] . "'";
         }
         $sql .= ' OR ';
@@ -178,4 +192,5 @@ class Utility {
     $sql = \trim($sql, ' OR ');
     return $sql;
   }
+  
 }

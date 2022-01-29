@@ -16,7 +16,7 @@ class Utility {
    * @param string $databaseType
    * @return array
    */
-  public static function checkCredentiel($configDataBase, $databaseType) {
+  public static function checkCredentiel(array $configDataBase, string $databaseType) {
     $check = str_contains($_SERVER['SERVER_NAME'], ".kksa");
     if (!empty($databaseType)) {
       if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {

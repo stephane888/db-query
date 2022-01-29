@@ -100,7 +100,6 @@ class WbuJsonDb {
       WbuDb::$dbName = $dataBaseConfig['dbName'];
       if (!empty($dataBaseConfig['host'])) {
         WbuDb::$host = $dataBaseConfig['host'];
-        debugLog::saveLogs($dataBaseConfig, 'credentielDB');
       }
     }
     else {
@@ -140,7 +139,8 @@ class WbuJsonDb {
   }
   
   /**
-   * Pour effectuer une req sans argument, ou tout est definit dans la requete
+   * Pour effectuer une req sans argument, ou tout est definit dans la requete.
+   * En cas d'erreur, elle sont transmise dans les logs.
    *
    * @param string $req
    * @return array // retourne plusieurs resultat.
@@ -336,6 +336,16 @@ class WbuJsonDb {
       return $result;
     }
     return false;
+  }
+  
+  /**
+   *
+   * @param string $table
+   * @param array $fields
+   * @return mixed|boolean|number
+   */
+  public function insert_v2($table, $fields) {
+    return $this->insert($table, $fields);
   }
   
   /**

@@ -75,7 +75,7 @@ class WbuDb {
       return $result;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e);
+      return Utility::errorMessage($e, 0);
     }
   }
   
@@ -143,7 +143,7 @@ class WbuDb {
       return $result;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e);
+      return Utility::errorMessage($e, 0);
     }
   }
   
@@ -157,7 +157,7 @@ class WbuDb {
       return $result;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e);
+      return Utility::errorMessage($e, 0);
     }
   }
   
@@ -195,7 +195,7 @@ class WbuDb {
       return $insert;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e);
+      return Utility::errorMessage($e, 0);
     }
   }
   

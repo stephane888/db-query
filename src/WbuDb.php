@@ -166,6 +166,8 @@ class WbuDb {
   }
   
   /**
+   * Capture l'erreur.
+   * ( Utile dans les boucles ).
    * http://www.mustbebuilt.co.uk/php/insert-update-and-delete-with-pdo/
    *
    * @param mixed $req
@@ -174,29 +176,40 @@ class WbuDb {
    */
   public static function insertPrepare($req, $arg) {
     try {
-      // On se connecte
-      $bdd = self::connectParam();
-      // On prépare la requête
-      $requete = $bdd->prepare($req);
-      
-      // On lie la variable $email définie au-dessus au paramètre :email de la
-      // requête préparée
-      foreach ($arg as $k => $j) {
-        $requete->bindValue($k, $j, PDO::PARAM_STR);
-      }
-      
-      // On exécute la requête
-      $requete->execute();
-      $insert = ($bdd->lastInsertId()) ? $bdd->lastInsertId() : $requete->rowCount();
-      // \customapi\debugLog::logs($insert, 'lastInsertId');
-      // \customapi\debugLog::logs($requete->rowCount(), 'lastInsertId2');
-      // return last insert id
-      $bdd = null;
-      return $insert;
+      return self::insert($req, $arg);
     }
     catch (\Exception $e) {
       return Utility::errorMessage($e, 0);
     }
+  }
+  
+  /**
+   * Permet D'ajouter les données en BD.
+   *
+   * @param string $req
+   * @param array $arg
+   * @return int
+   */
+  public static function insert(string $req, Array $arg) {
+    // On se connecte
+    $bdd = self::connectParam();
+    // On prépare la requête
+    $requete = $bdd->prepare($req);
+    
+    // On lie la variable $email définie au-dessus au paramètre :email de la
+    // requête préparée
+    foreach ($arg as $k => $j) {
+      $requete->bindValue($k, $j, PDO::PARAM_STR);
+    }
+    
+    // On exécute la requête
+    $requete->execute();
+    $insert = ($bdd->lastInsertId()) ? $bdd->lastInsertId() : $requete->rowCount();
+    // \customapi\debugLog::logs($insert, 'lastInsertId');
+    // \customapi\debugLog::logs($requete->rowCount(), 'lastInsertId2');
+    // return last insert id
+    $bdd = null;
+    return $insert;
   }
   
 }

@@ -301,36 +301,44 @@ class WbuJsonDb {
   }
   
   /**
+   * Permet de faire un envoie tout en gerant les erreurs si $ignorError = true
    *
    * @param string $table
    * @param array $fields
+   * @param boolean $ignorError
+   *        doit etre supprimer pour la version 2.0.0.
    * @return mixed
+   *
    */
-  public function insert($table, $fields) {
-    // $resul = DB::insert($table, $fields);
+  public function insert($table, $fields, $ignorError = true) {
     if (!empty($fields)) {
       $this->fieldsValues = $fields;
     }
     if (!empty($this->fieldsValues)) {
       $req = $this->buildReqIn($table);
       $this->last_req = $req;
-      $result = WbuDb::insertPrepare($req, $this->arg);
-      $this->SqlHasError = false;
-      $this->lastErrorInfo = '';
-      if (!empty($result['PHP_execution_error'])) {
-        $this->lastErrorInfo = $result;
-        $this->SqlHasError = true;
-        /**
-         * Pour renvoyer les erreurs vers un fichiers.
-         */
-        if ($this->debug) {
-          $errors = [
-            'req' => $req,
-            'error' => $result
-          ];
-          $filename = ($this->filename != '') ? $this->filename : 'insert_error-' . date('d-m-Y');
-          debugLog::saveLogs($errors, 'sql__' . $filename);
+      if ($ignorError) {
+        $result = WbuDb::insertPrepare($req, $this->arg);
+        $this->SqlHasError = false;
+        $this->lastErrorInfo = '';
+        if (!empty($result['PHP_execution_error'])) {
+          $this->lastErrorInfo = $result;
+          $this->SqlHasError = true;
+          /**
+           * Pour renvoyer les erreurs vers un fichiers.
+           */
+          if ($this->debug) {
+            $errors = [
+              'req' => $req,
+              'error' => $result
+            ];
+            $filename = ($this->filename != '') ? $this->filename : 'insert_error-' . date('d-m-Y');
+            debugLog::saveLogs($errors, 'sql__' . $filename);
+          }
         }
+      }
+      else {
+        $result = WbuDb::insert($req, $this->arg);
       }
       $this->resetValue();
       return $result;
@@ -339,10 +347,12 @@ class WbuJsonDb {
   }
   
   /**
+   * Cette version est utilisé par une application.
    *
    * @param string $table
    * @param array $fields
    * @return mixed|boolean|number
+   * @deprecated
    */
   public function insert_v2($table, $fields) {
     return $this->insert($table, $fields);

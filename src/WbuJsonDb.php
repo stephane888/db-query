@@ -467,11 +467,15 @@ class WbuJsonDb {
     }
     $fields = trim($fields, ',');
     $values = trim($values, ',');
-    $req = "INSERT INTO `$table`  ( $fields ) VALUES ( $values )";
+    $req = " INSERT INTO `$table`  ( $fields ) VALUES ( $values ) ";
     
     return $req;
   }
   
+  /**
+   *
+   * @return \PDO
+   */
   public function getPDO() {
     return WbuDb::getConnectParam();
   }

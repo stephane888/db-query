@@ -522,7 +522,7 @@ class WbuJsonDb
    * @param boolean $unique
    * @return array
    */
-  public static function addFilter($filters, $column, $value, $operatosaveQueryr = '=', $logique = 'AND', $unique = false, $preffix = '')
+  public static function addFilter($filters, $column, $value, $operator = '=', $logique = 'AND', $unique = false, $preffix = '')
   {
     if (!$unique) {
       $filters[$logique][] = [

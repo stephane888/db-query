@@ -10,8 +10,9 @@ use Stephane888\Debug\debugLog;
  * @author stephane
  *        
  */
-class WbuJsonDb {
-  
+class WbuJsonDb
+{
+
   /**
    * Use for select.
    *
@@ -20,7 +21,7 @@ class WbuJsonDb {
   public $fields = [];
   public $GroupBy = [];
   public $OrderBy = [];
-  
+
   /**
    * Exemple:$BD->Where = [
    * 'order-id' => [
@@ -39,41 +40,47 @@ class WbuJsonDb {
   public $LEFT_JOIN = [];
   public $is_rebuild = true;
   public $last_req = NULL;
-  
+
   /**
    * Use for Insert and Update
    *
    * @var array
    */
   public $fieldsValues = [];
-  
+
   /**
    * Permet d'enregistrer les erreurs dans un log.
    */
   public $debug = true;
-  
+
   /**
    * Pour verifier une erreur.
    */
   private $SqlHasError = false;
   public $lastErrorInfo = '';
-  
+
   /**
    * cc
    */
   public $filename = '';
-  
+  /**
+   * save the executed query
+   */
+  private $query;
+
   /**
    *
    * @param array $dataBaseConfig
    * @param boolean $autocommit
    */
-  function __construct($dataBaseConfig, $autocommit = true) {
+  function __construct($dataBaseConfig, $autocommit = true)
+  {
     $this->credentielDB($dataBaseConfig);
     $this->setAutocommit($autocommit);
   }
-  
-  public function resetValue() {
+
+  public function resetValue()
+  {
     if ($this->is_rebuild) {
       $this->fields = [];
       $this->GroupBy = [];
@@ -85,15 +92,17 @@ class WbuJsonDb {
       $this->fieldsValues = [];
     }
   }
-  
-  public function hasError() {
+
+  public function hasError()
+  {
     return $this->SqlHasError;
   }
-  
+
   /**
    * Connection à la Base de donnée
    */
-  protected function credentielDB($dataBaseConfig) {
+  protected function credentielDB($dataBaseConfig)
+  {
     if (!empty($dataBaseConfig['user']) && isset($dataBaseConfig['password']) && !empty($dataBaseConfig['dbName'])) {
       WbuDb::$user = $dataBaseConfig['user'];
       WbuDb::$password = $dataBaseConfig['password'];
@@ -101,12 +110,11 @@ class WbuJsonDb {
       if (!empty($dataBaseConfig['host'])) {
         WbuDb::$host = $dataBaseConfig['host'];
       }
-    }
-    else {
+    } else {
       throw new \Exception('Paramettre de connexion a la BD non definit');
     }
   }
-  
+
   /**
    * Permet de modifier le status de l'auto commit de Mysql.
    * Ce paramettre est par defaut à true, i.e toutes les requetes sont
@@ -117,11 +125,13 @@ class WbuJsonDb {
    *
    * @param boolean $autocommit
    */
-  public function setAutocommit($autocommit) {
+  public function setAutocommit($autocommit)
+  {
     WbuDb::$autocommit = $autocommit;
   }
-  
-  public function select($table) {
+
+  public function select($table)
+  {
     $result = $this->executeQuery($this->buildReq($table), $this->arg);
     // \Drupal\debug_log\debugLog::logs( [$req, $this->arg, $result],
     // 'select_req', 'kint0', $auto=false);
@@ -129,15 +139,16 @@ class WbuJsonDb {
     $this->resetValue();
     return $result;
   }
-  
-  public function selectOne($table) {
+
+  public function selectOne($table)
+  {
     $result = $this->executeQueryOne($this->buildReq($table), $this->arg);
     // \customapi\debugLog::logs($commands, 'commandes-shopify_'.date('d-Y'));
     // reset values
     $this->resetValue();
     return $result;
   }
-  
+
   /**
    * Pour effectuer une req sans argument, ou tout est definit dans la requete.
    * En cas d'erreur, elle sont transmise dans les logs.
@@ -145,20 +156,22 @@ class WbuJsonDb {
    * @param string $req
    * @return array // retourne plusieurs resultat.
    */
-  public function CustomRequest($req) {
+  public function CustomRequest($req)
+  {
     return $this->executeQuery($req);
   }
-  
+
   /**
    * Pour effectuer une req sans argument, ou tout est definit dans la requete.
    * Declenche une erreur PHP au cas ou.
    *
    * @param string $req
    */
-  public function CustomRequestV2($req) {
+  public function CustomRequestV2($req)
+  {
     return WbuDb::selectPrepareV2($req, []);
   }
-  
+
   /**
    * Pour effectuer une req sans argument, ou tout est definit dans la requete
    *
@@ -167,32 +180,38 @@ class WbuJsonDb {
    *
    * @return array // retourne une ligne.
    */
-  public function CustomRequestFirst($req) {
+  public function CustomRequestFirst($req)
+  {
     return $this->executeQueryOne($req);
   }
-  
+
   /**
    * Pour effectuer une req sans argument, ou tout est definit dans la requete
    *
    * @param string $req
    * @return array // Retourne une ligne.
    */
-  public function queryFirstRow($req) {
+  public function queryFirstRow($req)
+  {
     return $this->executeQueryOne($req);
   }
-  
+
   /**
    * exemple : DELETE FROM Users WHERE nom='Giraud'
    *
    * @param string $req
    * @return boolean[]|NULL[]
    */
-  public function deleteDatas($req) {
+  public function deleteDatas($req)
+  {
     return WbuDb::deletePrepare($req);
   }
-  
-  protected function executeQuery($req, $arg = []) {
+
+  protected function executeQuery($req, $arg = [])
+  {
     $result = WbuDb::selectPrepare($req, $arg);
+    $this->query = WbuDb::getQuery();
+
     if ($this->debug && !empty($result['PHP_execution_error'])) {
       $errors = [
         'req' => $req,
@@ -203,8 +222,9 @@ class WbuJsonDb {
     }
     return $result;
   }
-  
-  protected function executeQueryOne($req, $arg = []) {
+
+  protected function executeQueryOne($req, $arg = [])
+  {
     $result = WbuDb::selectPrepare($req, $arg, 'one');
     if ($this->debug && !empty($result['PHP_execution_error'])) {
       $errors = [
@@ -216,27 +236,27 @@ class WbuJsonDb {
     }
     return $result;
   }
-  
+
   /**
    * Buld select requette
    *
    * @param string $table
    * @return string
    */
-  protected function buildReq($table) {
+  protected function buildReq($table)
+  {
     $fields = '';
     if (!empty($this->fields)) {
       foreach ($this->fields as $field) {
         $fields .= $field . ',';
       }
       $fields = trim($fields, ',');
-    }
-    else {
+    } else {
       $fields = '*';
     }
     // select
     $req = "SELECT $fields FROM {$table} ";
-    // INNER_JOIN
+    // INNER_JOINquery
     if (!empty($this->INNER_JOIN)) {
       $fields = '';
       foreach ($this->INNER_JOIN as $field) {
@@ -250,7 +270,6 @@ class WbuJsonDb {
       foreach ($this->LEFT_JOIN as $field) {
         $fields .= " LEFT JOIN $field ";
       }
-      $req .= " $fields ";
     }
     // WHERE
     if (!empty($this->Where)) {
@@ -263,12 +282,11 @@ class WbuJsonDb {
         if (!empty($field['operator'])) {
           $operator = $field['operator'];
         }
-        
+
         if (!empty($field['join'])) {
           $fields .= $field['join'] . '.' . $field['field'] . $operator . ':' . $field['join'] . $field['field'] . ' AND ';
           $this->arg[':' . $field['join'] . $field['field']] = $field['value'];
-        }
-        else {
+        } else {
           $fields .= $field['field'] . $operator . ':' . $field['field'] . ' AND ';
           $this->arg[':' . $field['field']] = $field['value'];
         }
@@ -294,12 +312,12 @@ class WbuJsonDb {
       $fields = trim($fields, ',');
       $req .= " ORDER BY $fields ";
     }
-    
+
     $this->last_req = $req;
     $this->Last_arg = $this->arg;
     return $req;
   }
-  
+
   /**
    * Permet de faire un envoie tout en gerant les erreurs si $ignorError = true
    *
@@ -310,7 +328,8 @@ class WbuJsonDb {
    * @return mixed
    *
    */
-  public function insert($table, $fields, $ignorError = true) {
+  public function insert($table, $fields, $ignorError = true)
+  {
     if (!empty($fields)) {
       $this->fieldsValues = $fields;
     }
@@ -336,8 +355,7 @@ class WbuJsonDb {
             debugLog::saveLogs($errors, 'sql__' . $filename);
           }
         }
-      }
-      else {
+      } else {
         $result = WbuDb::insert($req, $this->arg);
       }
       $this->resetValue();
@@ -345,7 +363,7 @@ class WbuJsonDb {
     }
     return false;
   }
-  
+
   /**
    * Cette version est utilisé par une application.
    *
@@ -354,16 +372,18 @@ class WbuJsonDb {
    * @return mixed|boolean|number
    * @deprecated
    */
-  public function insert_v2($table, $fields) {
+  public function insert_v2($table, $fields)
+  {
     return $this->insert($table, $fields);
   }
-  
+
   /**
    *
    * @param string $table
    * @param string $fields
    */
-  public function update($table, $fields) {
+  public function update($table, $fields)
+  {
     if (!empty($fields)) {
       $this->fieldsValues = $fields;
     }
@@ -388,7 +408,7 @@ class WbuJsonDb {
     }
     return false;
   }
-  
+
   /**
    * Buld select requette;
    * NB requete update with operator =
@@ -396,7 +416,8 @@ class WbuJsonDb {
    * @param string $table
    * @return string
    */
-  protected function buildReqUp($table) {
+  protected function buildReqUp($table)
+  {
     $fields = '';
     foreach ($this->fieldsValues as $key => $field) {
       $keyFormat = $this->filterstring($key);
@@ -405,7 +426,7 @@ class WbuJsonDb {
     }
     $fields = trim($fields, ',');
     $req = "UPDATE `$table` SET $fields";
-    
+
     /**
      * Construction de la partie WHERE
      */
@@ -432,8 +453,7 @@ class WbuJsonDb {
          */
         $fields .= $field['join'] . '.' . $field['field'] . $operator . ':' . $field['join'] . $field['field'] . ' AND ';
         $this->arg[':' . $field['join'] . $field['field']] = $field['value'];
-      }
-      else {
+      } else {
         $keyFormat = 'upd_' . $this->filterstring($field['field']);
         $fields .= '`' . $field['field'] . '`' . $operator . ':' . $keyFormat . ' AND ';
         $this->arg[':' . $keyFormat] = $field['value'];
@@ -446,18 +466,20 @@ class WbuJsonDb {
     // '</pre>';
     return $req;
   }
-  
-  protected function filterstring($string) {
+
+  protected function filterstring($string)
+  {
     return str_replace("-", "_", $string);
   }
-  
+
   /**
    * Buld insert requette
    *
    * @param string $table
    * @return string
    */
-  protected function buildReqIn($table) {
+  protected function buildReqIn($table)
+  {
     $fields = $values = '';
     foreach ($this->fieldsValues as $key => $field) {
       $keyFormat = $this->filterstring($key);
@@ -468,18 +490,19 @@ class WbuJsonDb {
     $fields = trim($fields, ',');
     $values = trim($values, ',');
     $req = " INSERT INTO `$table`  ( $fields ) VALUES ( $values ) ";
-    
+
     return $req;
   }
-  
+
   /**
    *
    * @return \PDO
    */
-  public function getPDO() {
+  public function getPDO()
+  {
     return WbuDb::getConnectParam();
   }
-  
+
   /**
    *
    * @param array $filters
@@ -490,7 +513,8 @@ class WbuJsonDb {
    * @param boolean $unique
    * @return array
    */
-  public static function addFilter($filters, $column, $value, $operator = '=', $logique = 'AND', $unique = false, $preffix = '') {
+  public static function addFilter($filters, $column, $value, $operatosaveQueryr = '=', $logique = 'AND', $unique = false, $preffix = '')
+  {
     if (!$unique) {
       $filters[$logique][] = [
         'column' => $column,
@@ -499,8 +523,7 @@ class WbuJsonDb {
         'preffix' => $preffix
       ];
       return $filters;
-    }
-    else {
+    } else {
       if (empty($filters[$logique])) {
         $filters[$logique][] = [
           'column' => $column,
@@ -509,8 +532,7 @@ class WbuJsonDb {
           'preffix' => $preffix
         ];
         return $filters;
-      }
-      else {
+      } else {
         foreach ($filters[$logique] as $key => $val) {
           if ($val['column'] == $column) {
             $filters[$logique][$key] = [
@@ -532,22 +554,9 @@ class WbuJsonDb {
       }
     }
   }
-  
+
+  public function getQuery()
+  {
+    return $this->query;
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

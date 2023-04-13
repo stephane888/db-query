@@ -206,9 +206,12 @@ class WbuJsonDb
   {
     return WbuDb::deletePrepare($req);
   }
-
-  protected function executeQuery($req, $arg = [])
-  {
+  
+  public function delete($req) {
+    return $this->deleteDatas($req);
+  }
+  
+  protected function executeQuery($req, $arg = []) {
     $result = WbuDb::selectPrepare($req, $arg);
     $this->query = WbuDb::getQuery();
 
@@ -382,31 +385,37 @@ class WbuJsonDb
    * @param string $table
    * @param string $fields
    */
-  public function update($table, $fields)
-  {
+  public function update($table, $fields, $ignorError = true) {
     if (!empty($fields)) {
       $this->fieldsValues = $fields;
     }
-    if (!empty($this->fieldsValues) && !empty($this->Where)) {
-      $req = $this->buildReqUp($table);
-      $this->last_req = $req;
-      $result = WbuDb::updatePrepare($req, $this->arg);
-      $this->resetValue();
-      $this->SqlHasError = false;
-      $this->lastErrorInfo = '';
-      if ($this->debug && !empty($result['PHP_execution_error'])) {
-        $this->lastErrorInfo = $result;
-        $this->SqlHasError = true;
-        $errors = [
-          'table' => $table,
-          'error' => $result
-        ];
-        $filename = ($this->filename != '') ? $this->filename : 'update_error-' . date('m-Y');
-        debugLog::saveLogs($errors, 'sql__' . $filename);
+    if ($ignorError) {
+      if (!empty($this->fieldsValues) && !empty($this->Where)) {
+        $req = $this->buildReqUp($table);
+        $this->last_req = $req;
+        $result = WbuDb::updatePrepare($req, $this->arg);
+        $this->resetValue();
+        $this->SqlHasError = false;
+        $this->lastErrorInfo = '';
+        if ($this->debug && !empty($result['PHP_execution_error'])) {
+          $this->lastErrorInfo = $result;
+          $this->SqlHasError = true;
+          $errors = [
+            'table' => $table,
+            'error' => $result
+          ];
+          $filename = ($this->filename != '') ? $this->filename : 'update_error-' . date('m-Y');
+          debugLog::saveLogs($errors, 'sql__' . $filename);
+        }
+        return $result;
       }
+    }
+    else {
+      $req = $this->buildReqUp($table);
+      $result = WbuDb::update($req, $this->arg);
+      $this->resetValue();
       return $result;
     }
-    return false;
   }
 
   /**

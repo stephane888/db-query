@@ -147,6 +147,35 @@ class WbuDb {
     }
   }
   
+  /**
+   *
+   * @param mixed $req
+   * @param mixed $arg
+   * @return number|mixed
+   */
+  public static function update($req, $arg) {
+    // On se connecte
+    $bdd = self::connectParam();
+    // On prépare la requête
+    $requete = $bdd->prepare($req);
+    
+    // On lie la variable $email définie au-dessus au paramètre :email de la
+    // requête préparée
+    foreach ($arg as $k => $j) {
+      $requete->bindValue($k, $j, PDO::PARAM_STR);
+    }
+    
+    // On exécute la requête
+    $requete->execute();
+    // \customapi\debugLog::logs($rt, 'execute_up');
+    // \customapi\debugLog::logs($requete->rowCount(), 'rowCount');
+    // return $rt;// true or false
+    // return number line updated
+    $result = $requete->rowCount();
+    $bdd = null;
+    return $result;
+  }
+  
   public static function deletePrepare($req) {
     try {
       $bdd = self::connectParam();

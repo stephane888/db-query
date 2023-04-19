@@ -7,6 +7,7 @@ use Stephane888\Debug\debugLog;
 
 class Utility {
   public static $result;
+  public static $is_localhost = false;
   
   /**
    * Return les parametres pour la connection à la BD;
@@ -21,6 +22,7 @@ class Utility {
     if (!empty($databaseType)) {
       if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {
         $databaseType = 'localhost';
+        self::$is_localhost = true;
       }
       elseif (empty($configDataBase[$databaseType])) {
         throw new \Error('Base de donnée non definit');

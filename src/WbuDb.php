@@ -14,9 +14,12 @@ class WbuDb {
   public static $autocommit = false;
   public static $BDD;
   private $BD;
-  
   private static $query;
   
+  /**
+   *
+   * @return \PDO
+   */
   protected static function connectParam() {
     // On se connecte
     if (self::$autocommit) {
@@ -57,20 +60,20 @@ class WbuDb {
       
       // On prépare la requête
       $requete = $bdd->prepare($req);
-
-
       
       //
       foreach ($arg as $k => $j) {
         $requete->bindValue($k, $j, PDO::PARAM_STR);
       }
-
-      //On sauvegarde la requête
-      self::$query = $requete->queryString;
-
+      
+      // On sauvegarde la requête
+      self::$query = [
+        'sql' => $requete->queryString,
+        'arg' => $arg
+      ];
+      
       // On exécute la requête
       $requete->execute();
-
       
       // On récupère le résultat
       if ($type == '') {
@@ -86,6 +89,7 @@ class WbuDb {
       return Utility::errorMessage($e, 0);
     }
   }
+  
   /**
    * Declenche une erreur PHP au cas ou.
    *
@@ -105,9 +109,12 @@ class WbuDb {
     foreach ($arg as $k => $j) {
       $requete->bindValue($k, $j, PDO::PARAM_STR);
     }
-      
-      //On sauvegarde la requête
-      self::$query = $requete->queryString;
+    
+    // On sauvegarde la requête
+    self::$query = [
+      'sql' => $requete->queryString,
+      'arg' => $arg
+    ];
     
     // On exécute la requête
     $requete->execute();
@@ -123,7 +130,8 @@ class WbuDb {
     return $result;
   }
   
-  /**query
+  /**
+   * query
    *
    * @param mixed $req
    * @param mixed $arg
@@ -142,8 +150,11 @@ class WbuDb {
         $requete->bindValue($k, $j, PDO::PARAM_STR);
       }
       
-      //On sauvegarde la requête
-      self::$query = $requete->queryString;
+      // On sauvegarde la requête
+      self::$query = [
+        'sql' => $requete->queryString,
+        'arg' => $arg
+      ];
       
       // On exécute la requête
       $requete->execute();
@@ -194,10 +205,9 @@ class WbuDb {
       $bdd = self::connectParam();
       $requete = $bdd->prepare($req);
       
-      //On sauvegarde la requête
+      // On sauvegarde la requête
       self::$query = $requete->queryString;
-
-
+      
       $requete->execute();
       $result = $requete->rowCount();
       $bdd = null;
@@ -248,9 +258,12 @@ class WbuDb {
     foreach ($arg as $k => $j) {
       $requete->bindValue($k, $j, PDO::PARAM_STR);
     }
-      
-      //On sauvegarde la requête
-      self::$query = $requete->queryString;
+    
+    // On sauvegarde la requête
+    self::$query = [
+      'sql' => $requete->queryString,
+      'arg' => $arg
+    ];
     
     // On exécute la requête
     $requete->execute();
@@ -261,12 +274,11 @@ class WbuDb {
     $bdd = null;
     return $insert;
   }
-
+  
   /**
    * Return executed query
    */
-  public static function getQuery()
-  {
+  public static function getQuery() {
     return self::$query;
   }
   

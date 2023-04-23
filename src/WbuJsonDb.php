@@ -146,6 +146,8 @@ class WbuJsonDb {
    * Pour effectuer une req sans argument, ou tout est definit dans la requete.
    * En cas d'erreur, elle sont transmise dans les logs.
    *
+   * @deprecated use CustomRequestV2, car il est preferable que l'erreur soit
+   *             analysé par les processus parent.
    * @param string $req
    * @return array // retourne plusieurs resultat.
    */
@@ -164,9 +166,19 @@ class WbuJsonDb {
   }
   
   /**
+   * Pour effectuer une req sans argument, ou tout est definit dans la requete.
+   * Declenche une erreur PHP au cas ou.
+   *
+   * @param string $req
+   */
+  public function CustomRequestV2First($req) {
+    return WbuDb::selectPrepareV2($req, [], false);
+  }
+  
+  /**
    * Pour effectuer une req sans argument, ou tout est definit dans la requete
    *
-   * @deprecated use queryFirstRow
+   * @deprecated use CustomRequestV2First
    * @param string $req
    *
    * @return array // retourne une ligne.
@@ -178,6 +190,7 @@ class WbuJsonDb {
   /**
    * Pour effectuer une req sans argument, ou tout est definit dans la requete
    *
+   * @deprecated use CustomRequestV2First
    * @param string $req
    * @return array // Retourne une ligne.
    */
@@ -186,7 +199,7 @@ class WbuJsonDb {
   }
   
   /**
-   * exemple : DELETE FROM Users WHERE nom='Giraud'
+   * Exemple : DELETE FROM Users WHERE nom='Giraud'
    *
    * @param string $req
    * @return boolean[]|NULL[]
@@ -255,7 +268,7 @@ class WbuJsonDb {
       $fields = '*';
     }
     // select
-    $req = "SELECT $fields FROM {$table} ";
+    $req = "SELECT $fields FROM `{$table}` ";
     // INNER_JOINquery
     if (!empty($this->INNER_JOIN)) {
       $fields = '';

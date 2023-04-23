@@ -98,7 +98,7 @@ class WbuDb {
    * @param string $type
    * @return array|mixed|mixed
    */
-  public static function selectPrepareV2($req, $arg = [], $type = '') {
+  public static function selectPrepareV2($req, $arg = [], $AllRows = true) {
     // On se connecte
     $bdd = self::connectParam();
     // On prépare la requête
@@ -120,7 +120,7 @@ class WbuDb {
     $requete->execute();
     
     // On récupère le résultat
-    if ($type == '') {
+    if ($AllRows) {
       $result = $requete->fetchAll(PDO::FETCH_ASSOC);
     }
     else {

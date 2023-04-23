@@ -3,7 +3,7 @@
 namespace Query;
 
 use PDO;
-use Stephane888\Debug\Utility;
+use Stephane888\Debug\ExceptionExtractMessage;
 
 class WbuDb {
   public static $user;
@@ -86,7 +86,7 @@ class WbuDb {
       return $result;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e, 0);
+      return ExceptionExtractMessage::errorMessage($e, 0);
     }
   }
   
@@ -167,7 +167,7 @@ class WbuDb {
       return $result;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e, 0);
+      return ExceptionExtractMessage::errorMessage($e, 0);
     }
   }
   
@@ -214,7 +214,7 @@ class WbuDb {
       return $result;
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e, 0);
+      return ExceptionExtractMessage::errorMessage($e, 0);
     }
   }
   
@@ -236,7 +236,7 @@ class WbuDb {
       return self::insert($req, $arg);
     }
     catch (\Exception $e) {
-      return Utility::errorMessage($e, 0);
+      return ExceptionExtractMessage::errorMessage($e, 0);
     }
   }
   

@@ -13,6 +13,7 @@ class WbuDb {
   public static $driver;
   public static $autocommit = false;
   public static $BDD;
+  public static $disabledUtf8 = false;
   private $BD;
   private static $query;
   
@@ -21,13 +22,21 @@ class WbuDb {
    * @return \PDO
    */
   protected static function connectParam() {
+    if (self::$disabledUtf8) {
+      $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
+      ]);
+      return $bdd;
+    }
+    
     // On se connecte
     if (self::$autocommit) {
-      $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, array(
+      $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
         // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
-      ));
+      ]);
       $bdd->exec("set names utf8");
     }
     else {
@@ -118,7 +127,6 @@ class WbuDb {
     
     // On exécute la requête
     $requete->execute();
-    
     // On récupère le résultat
     if ($AllRows) {
       $result = $requete->fetchAll(PDO::FETCH_ASSOC);
@@ -255,9 +263,9 @@ class WbuDb {
     
     // On lie la variable $email définie au-dessus au paramètre :email de la
     // requête préparée
-    foreach ($arg as $k => $j) {
-      $requete->bindValue($k, $j, PDO::PARAM_STR);
-    }
+    // foreach ($arg as $k => $j) {
+    // $requete->bindValue($k, $j, PDO::PARAM_STR);
+    // }
     
     // On sauvegarde la requête
     self::$query = [
@@ -266,7 +274,7 @@ class WbuDb {
     ];
     
     // On exécute la requête
-    $requete->execute();
+    $requete->execute($arg);
     $insert = ($bdd->lastInsertId()) ? $bdd->lastInsertId() : $requete->rowCount();
     // \customapi\debugLog::logs($insert, 'lastInsertId');
     // \customapi\debugLog::logs($requete->rowCount(), 'lastInsertId2');

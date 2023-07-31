@@ -22,6 +22,10 @@ class WbuDb {
    * @return \PDO
    */
   protected static function connectParam() {
+    // permet principalement d'effectuer des tests.
+    if (self::$BDD)
+      return self::$BDD;
+    
     if (self::$disabledUtf8) {
       $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -263,9 +267,9 @@ class WbuDb {
     
     // On lie la variable $email définie au-dessus au paramètre :email de la
     // requête préparée
-    // foreach ($arg as $k => $j) {
-    // $requete->bindValue($k, $j, PDO::PARAM_STR);
-    // }
+    foreach ($arg as $k => $j) {
+      $requete->bindValue($k, $j, PDO::PARAM_STR);
+    }
     
     // On sauvegarde la requête
     self::$query = [
@@ -274,7 +278,7 @@ class WbuDb {
     ];
     
     // On exécute la requête
-    $requete->execute($arg);
+    $requete->execute();
     $insert = ($bdd->lastInsertId()) ? $bdd->lastInsertId() : $requete->rowCount();
     // \customapi\debugLog::logs($insert, 'lastInsertId');
     // \customapi\debugLog::logs($requete->rowCount(), 'lastInsertId2');

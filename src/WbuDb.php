@@ -6,51 +6,89 @@ use PDO;
 use Stephane888\Debug\ExceptionExtractMessage;
 
 class WbuDb {
+  /**
+   * Nom d'utilisateur
+   *
+   * @var string
+   */
   public static $user;
+  /**
+   *
+   * @var string
+   */
   public static $password;
+  /**
+   *
+   * @var string
+   */
   public static $dbName;
   public static $host = 'localhost';
-  public static $driver;
+  /**
+   * si la valeur est false, vous devez effectuer le commit manuellement pour
+   * valider la sauvegarde.
+   * ( Dans la pluspart des utilisations mettez la valeur true.
+   *
+   * @var boolean
+   */
   public static $autocommit = false;
+  /**
+   * Permet de construire sa propre connexion.
+   *
+   * @var PDO
+   */
+  /**
+   * Permet de sauvegarder l'object de connexion.
+   *
+   * @var PDO
+   */
   public static $BDD;
-  public static $disabledUtf8 = false;
-  private $BD;
-  private static $query;
+  /**
+   * Format à utiliser, utf8, utf8mb4, ...
+   *
+   * @var string
+   */
+  public static $format = "utf8";
+  /**
+   * Contient les informations sur la requete executée.
+   *
+   * @var mixed
+   */
+  private static $LastQuery;
   
   /**
    *
    * @return \PDO
    */
   protected static function connectParam() {
-    // permet principalement d'effectuer des tests.
+    // Permet d'initialiser la requete avec des paramettres specifique.
     if (self::$BDD)
       return self::$BDD;
     
-    if (self::$disabledUtf8) {
-      $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
-      ]);
-      return $bdd;
-    }
-    
     // On se connecte
     if (self::$autocommit) {
+      /**
+       * On ne sauvegarde pas l'object $bdd afin de permettre d'initialiser
+       * plusieurs connexion durant un cycle.
+       *
+       * @var PDO $bdd
+       */
       $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
-        // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
       ]);
-      $bdd->exec("set names utf8");
+      $bdd->exec("set names " . self::$format);
     }
     else {
+      /**
+       * On sauvegarde la connexion dans (self::$BDD) afin de ne pas la modifié
+       * tout au long du processus.
+       */
       if (empty(self::$BDD)) {
         $bdd = new PDO('mysql:host=' . self::$host . ';dbname=' . self::$dbName, self::$user, self::$password, array(
           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
           PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="TRADITIONAL"'
-          // PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
         ));
-        $bdd->exec("set names utf8");
+        $bdd->exec("set names " . self::$format);
         $bdd->beginTransaction();
         self::$BDD = $bdd;
       }
@@ -80,7 +118,7 @@ class WbuDb {
       }
       
       // On sauvegarde la requête
-      self::$query = [
+      self::$LastQuery = [
         'sql' => $requete->queryString,
         'arg' => $arg
       ];
@@ -124,7 +162,7 @@ class WbuDb {
     }
     
     // On sauvegarde la requête
-    self::$query = [
+    self::$LastQuery = [
       'sql' => $requete->queryString,
       'arg' => $arg
     ];
@@ -163,7 +201,7 @@ class WbuDb {
       }
       
       // On sauvegarde la requête
-      self::$query = [
+      self::$LastQuery = [
         'sql' => $requete->queryString,
         'arg' => $arg
       ];
@@ -218,7 +256,7 @@ class WbuDb {
       $requete = $bdd->prepare($req);
       
       // On sauvegarde la requête
-      self::$query = $requete->queryString;
+      self::$LastQuery = $requete->queryString;
       
       $requete->execute();
       $result = $requete->rowCount();
@@ -272,7 +310,7 @@ class WbuDb {
     }
     
     // On sauvegarde la requête
-    self::$query = [
+    self::$LastQuery = [
       'sql' => $requete->queryString,
       'arg' => $arg
     ];
@@ -291,7 +329,7 @@ class WbuDb {
    * Return executed query
    */
   public static function getQuery() {
-    return self::$query;
+    return self::$LastQuery;
   }
   
 }

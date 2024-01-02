@@ -44,7 +44,11 @@ class WbuDb {
   public static $BDD;
   /**
    * Format à utiliser, utf8, utf8mb4, ...
+   * NB : utiliser le format utf8mb4 tant que possible. car utf8 est deprecié.
    *
+   * @deprecated ( rappel pour changer la valeur utf8 en utf8mb4 à la version
+   *             4x).
+   * @see https://habeuk.com/fr/node/84
    * @var string
    */
   public static $format = "utf8";

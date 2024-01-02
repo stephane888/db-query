@@ -21,12 +21,17 @@ class Utility {
     $check = str_contains($_SERVER['SERVER_NAME'], ".kksa");
     if (!empty($databaseType)) {
       if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {
-        $databaseType = 'localhost';
+        if ($databaseType == 'prodNutribe')
+          $databaseType = 'localhost1';
+        else
+          $databaseType = 'localhost';
         self::$is_localhost = true;
       }
       elseif (empty($configDataBase[$databaseType])) {
         throw new \Error('Base de donnée non definit');
       }
+      
+      // dump($configDataBase, $configDataBase[$databaseType]);
       self::$result['base de donée'][] = $configDataBase[$databaseType];
       return $configDataBase[$databaseType];
     }

@@ -20,6 +20,13 @@ class Utility {
   public static function checkCredentiel(array $configDataBase, string $databaseType) {
     $check = str_contains($_SERVER['SERVER_NAME'], ".kksa");
     if (!empty($databaseType)) {
+      if ($_SERVER['SERVER_ADDR'] == "127.0.0.1" || $check) {
+        if ($databaseType == 'prodNutribe')
+          $databaseType = 'localhost1';
+        else
+          $databaseType = 'localhost';
+        self::$is_localhost = true;
+      }
       if (empty($configDataBase[$databaseType])) {
         throw new \Error('Base de donnée non definit');
       }
